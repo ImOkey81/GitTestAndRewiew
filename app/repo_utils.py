@@ -1,7 +1,6 @@
 import os
 import tempfile
 from pathlib import Path
-from urllib.parse import urlparse
 
 from git import Repo
 
@@ -19,33 +18,10 @@ SUPPORTED_EXTENSIONS = (
 )
 
 
-def _build_clone_candidates(url: str) -> list[str]:
-    trimmed_url = url.strip().rstrip("/")
-    parsed = urlparse(trimmed_url)
-
-    candidates = [trimmed_url]
-
-    if parsed.scheme in {"http", "https"} and parsed.netloc and not parsed.path.endswith(".git"):
-        candidates.append(f"{trimmed_url}.git")
-
-    deduped: list[str] = []
-    for candidate in candidates:
-        if candidate not in deduped:
-            deduped.append(candidate)
-    return deduped
-
-
 def clone_repo(url: str) -> str:
-    last_error = None
-    for candidate_url in _build_clone_candidates(url):
-        temp_dir = tempfile.mkdtemp(dir=os.getenv("TEMP_DIR"))
-        try:
-            Repo.clone_from(candidate_url, temp_dir)
-            return temp_dir
-        except Exception as exc:  # noqa: BLE001
-            last_error = exc
-
-    raise RuntimeError(f"Failed to clone repository from URL: {url}") from last_error
+    temp_dir = tempfile.mkdtemp(dir=os.getenv("TEMP_DIR"))
+    Repo.clone_from(url, temp_dir)
+    return temp_dir
 
 
 def _max_file_size() -> int:
