@@ -1,8 +1,15 @@
-def review_code(code_map: dict) -> str:
-    joined_code = "\n\n".join(code_map.values())[:8000]
-    prompt = (
-        "Проведи ревью следующего кода. Подчеркни потенциальные ошибки, улучшения, "
-        "рекомендации по стилю и производительности:\n\n" + joined_code
+from app.prompting import build_repo_prompt
+
+
+def review_code(code_map: dict[str, str]) -> str:
+    prompt = build_repo_prompt(
+        task_description=(
+            "Проведи code review: найди потенциальные баги, проблемы надежности, "
+            "безопасности, читаемости и производительности. Для каждого пункта укажи "
+            "серьезность и предложи конкретное исправление."
+        ),
+        code_map=code_map,
     )
     from app.mistral_client import mistral_chat
+
     return mistral_chat(prompt)
